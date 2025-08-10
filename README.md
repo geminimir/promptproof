@@ -12,6 +12,11 @@ PromptProof is a deterministic testing framework that enforces contracts on LLM 
 - **Provider Agnostic**: Works with OpenAI, Anthropic, and any HTTP-based LLM API
 - **Privacy First**: Built-in PII redaction and offline evaluation
 
+## 📋 Requirements
+
+- Node.js >= 18.0.0
+- npm >= 8.0.0
+
 ## 🚀 Quick Start
 
 ### Install CLI

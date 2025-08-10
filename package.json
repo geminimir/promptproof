@@ -6,6 +6,10 @@
   "workspaces": [
     "packages/*"
   ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "scripts": {
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
