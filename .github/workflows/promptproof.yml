@@ -25,6 +25,10 @@ jobs:
       - name: Build packages
         run: npm run build
       
+      - name: Test evaluator import
+        run: |
+          node packages/evaluator/test-import.js
+      
       - name: Run tests
         run: npm test
   
@@ -40,16 +44,17 @@ jobs:
       - name: Install dependencies
         run: npm install
       
-      - name: Build CLI
-        run: |
-          cd packages/cli
-          npm run build
+      - name: Build all packages
+        run: npm run build
       
       - name: Test CLI commands
         run: |
-          cd packages/cli
-          node dist/index.js --version
-          node dist/index.js --help
+          node packages/cli/dist/index.js --version
+          node packages/cli/dist/index.js --help
+      
+      - name: Test CLI evaluator import
+        run: |
+          node test-cli-import.js
   
   test-action:
     runs-on: ubuntu-latest
@@ -71,11 +76,11 @@ jobs:
         with:
           node-version: '20'
       
-      - name: Install CLI
-        run: |
-          npm install
-          cd packages/cli
-          npm run build
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Build all packages
+        run: npm run build
       
       - name: Validate fixtures
         run: |
