@@ -22,9 +22,9 @@ PromptProof is a deterministic testing framework that enforces contracts on LLM 
 ### Install CLI
 
 ```bash
-npm install -g promptproof-cli
+npm install -g promptproof-cli@beta
 # or
-npx promptproof init
+npx promptproof-cli@beta init
 ```
 
 ### Initialize in Your Project
@@ -38,27 +38,80 @@ This creates:
 - `fixtures/` - Directory for recorded outputs
 - `.github/workflows/promptproof.yml` - GitHub Action workflow
 
-### Record LLM Outputs
+## 📝 Record → Replay Workflow
 
-#### Using SDK Wrapper (Node.js + OpenAI)
+### Step 1: Record LLM Outputs (One Line Change!)
+
+#### OpenAI Integration
 
 ```javascript
-import OpenAI from 'openai';
-import { withPromptProof } from 'promptproof-sdk-openai';
+import OpenAI from 'openai'
+import { withPromptProofOpenAI } from 'promptproof-sdk-node@beta/openai'
 
-const client = withPromptProof(new OpenAI({ apiKey: process.env.OPENAI_API_KEY }), {
-  suite: 'support-replies',
-  source: 'production'
-});
+const base = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+export const ai = withPromptProofOpenAI(base, { suite: 'support-replies' })
 
-// Use client normally - outputs are automatically recorded
-const response = await client.chat.completions.create({
+// Use normally - fixtures are recorded automatically
+const response = await ai.chat.completions.create({
   model: 'gpt-4',
   messages: [{ role: 'user', content: 'Hello!' }]
-});
+})
 ```
 
-### Define Contracts
+#### Anthropic Integration
+
+```javascript
+import Anthropic from '@anthropic-ai/sdk'
+import { withPromptProofAnthropic } from 'promptproof-sdk-node@beta/anthropic'
+
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+export const claude = withPromptProofAnthropic(anthropic, { suite: 'rag-answers' })
+
+// Use normally - fixtures are recorded automatically
+const response = await claude.messages.create({
+  model: 'claude-3-sonnet-20240229',
+  max_tokens: 1000,
+  messages: [{ role: 'user', content: 'Hello!' }]
+})
+```
+
+#### Generic HTTP Integration
+
+```javascript
+import { wrapFetch } from 'promptproof-sdk-node@beta/http'
+
+// Wrap global fetch to record any LLM API calls
+globalThis.fetch = wrapFetch(globalThis.fetch, { suite: 'generic-llm' })
+
+// All fetch calls to LLM APIs are automatically recorded
+const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${apiKey}` },
+  body: JSON.stringify({ model: 'gpt-4', messages: [...] })
+})
+```
+
+### Step 2: Fixtures Are Created Automatically
+
+Each LLM call creates a sanitized record in `fixtures/<suite>/outputs.jsonl`:
+
+```json
+{
+  "schema_version": "pp.v1",
+  "id": "auto-generated",
+  "timestamp": "2024-08-10T12:34:56Z",
+  "source": "dev",
+  "input": {
+    "prompt": "user: Hello!\nassistant: Hi there!",
+    "params": { "model": "gpt-4", "temperature": 0.7 }
+  },
+  "output": { "text": "Hello! How can I help you today?" },
+  "metrics": { "latency_ms": 812, "cost_usd": 0.0012 },
+  "redaction": { "status": "sanitized" }
+}
+```
+
+### Step 3: Define Your Contracts
 
 ```yaml
 # promptproof.yaml
@@ -67,14 +120,14 @@ fixtures: fixtures/support-replies/outputs.jsonl
 checks:
   - id: no_pii
     type: regex_forbidden
-    target: text
+    target: output.text
     patterns:
       - "[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}"  # No emails
       - "\\b\\+?\\d[\\d\\s().-]{7,}\\b"           # No phone numbers
   
   - id: response_schema
     type: json_schema
-    target: json
+    target: output.json
     schema:
       type: object
       required: [status, message]
@@ -89,7 +142,7 @@ budgets:
 mode: warn  # Start with 'warn', switch to 'fail' after validation
 ```
 
-### Run Evaluation
+### Step 4: Evaluate Against Contracts
 
 ```bash
 # Local evaluation
@@ -98,6 +151,27 @@ promptproof eval -c promptproof.yaml
 # In CI (automatic via GitHub Action)
 # Runs on every PR and blocks merge on violations
 ```
+
+## ⚙️ Environment Variables
+
+Control recording behavior with environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PP_RECORD` | `1` (dev), `0` (prod) | Master on/off switch |
+| `PP_SAMPLE_RATE` | `1.0` | Record 0-100% of calls |
+| `PP_SUITE` | from options | Override suite name |
+| `PP_OUT` | `fixtures` | Custom output directory |
+| `PP_SOURCE` | `NODE_ENV` | Environment label |
+| `PP_SHARD_BY_PID` | `0` | Write to `outputs.<pid>.jsonl` |
+
+## 🔒 Safety & Privacy
+
+- ✅ **Redaction ON by default** - emails, phones, SSNs masked
+- ✅ **Never blocks your app** - recording failures are logged, not thrown
+- ✅ **No secrets recorded** - API keys and auth headers excluded
+- ✅ **Deterministic** - same input = same output (ignoring timestamp/id)
+- ✅ **Production ready** - sampling controls, PID sharding for concurrency
 
 ## 📊 Example Output
 
@@ -130,12 +204,14 @@ promptproof redact      # Remove PII from fixtures
 promptproof validate    # Validate fixture schema
 ```
 
+> **Note**: Use `npx promptproof-cli@beta` or install globally with `npm install -g promptproof-cli@beta`
+
 ## 📦 Packages
 
-- **evaluator**: Core evaluation engine
-- **cli**: Command-line interface
-- **sdk-wrappers**: OpenAI, Anthropic, HTTP adapters
-- **action**: GitHub Action for CI integration
+- **`promptproof-cli@beta`**: Command-line interface for evaluation
+- **`promptproof-sdk-node@beta`**: SDK wrappers for OpenAI, Anthropic, HTTP
+- **`@promptproof/action`**: GitHub Action for CI integration (coming soon)
+- **`@promptproof/evaluator`**: Core evaluation engine (bundled in CLI)
 
 ## 🎪 Failure Zoo
 
@@ -151,6 +227,7 @@ MIT License - see [LICENSE](./LICENSE) for details.
 
 ## 🔗 Links
 
-- [Documentation](https://promptproof.dev/docs)
-- [GitHub Action Marketplace](https://github.com/marketplace/actions/promptproof)
-- [NPM Package](https://www.npmjs.com/package/promptproof-cli)
+- [GitHub Repository](https://github.com/geminimir/promptproof)
+- [CLI Package](https://www.npmjs.com/package/promptproof-cli) (`@beta`)
+- [SDK Package](https://www.npmjs.com/package/promptproof-sdk-node) (`@beta`)
+- [GitHub Action](https://github.com/geminimir/promptproof) (coming soon)
