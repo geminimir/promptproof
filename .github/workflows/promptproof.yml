@@ -1,4 +1,4 @@
-name: PromptProof CI
+name: PromptProof
 on:
   push:
     branches: [main]
@@ -10,7 +10,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  build-and-test:
+  eval:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,9 +18,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
       
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       
       - name: Build packages
         run: npm run build
@@ -39,3 +40,6 @@ jobs:
       
       - name: Check formatting
         run: npm run format -- --check
+      
+      - name: Run tests
+        run: npm test

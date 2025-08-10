@@ -13,7 +13,7 @@ const program = new Command()
 program
   .name('promptproof')
   .description('Deterministic LLM testing for production reliability')
-  .version('0.1.0')
+  .version('0.1.0-beta.2')
 
 // eval command
 program

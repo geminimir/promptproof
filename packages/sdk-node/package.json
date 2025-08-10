@@ -1,0 +1,48 @@
+{
+  "name": "promptproof-sdk-node",
+  "version": "0.1.0-beta.0",
+  "description": "Record LLM inputs/outputs to PromptProof fixtures (Node)",
+  "type": "module",
+  "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./openai": "./dist/openai.js",
+    "./anthropic": "./dist/anthropic.js",
+    "./http": "./dist/http.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "prepublishOnly": "npm run build",
+    "test": "echo \"No tests yet\"",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "llm",
+    "testing",
+    "openai",
+    "anthropic",
+    "fixtures",
+    "promptproof"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/geminimir/promptproof.git"
+  },
+  "bugs": {
+    "url": "https://github.com/geminimir/promptproof/issues"
+  },
+  "homepage": "https://github.com/geminimir/promptproof#readme"
+}

@@ -1,8 +1,66 @@
 # PromptProof
 
-> **Deterministic LLM testing for production reliability**
+Deterministic LLM testing for production reliability.  
+**Record→Replay + policy‑as‑code** to catch PII leaks, schema drift, and behavioral regressions **before merge**.
 
-PromptProof is a deterministic testing framework that enforces contracts on LLM outputs in CI/CD pipelines. It prevents prompt regressions and ensures LLM behavior consistency through replay-based testing.
+[![CI](https://img.shields.io/github/actions/workflow/status/geminimir/promptproof/promptproof.yml?branch=main)](https://github.com/geminimir/promptproof/actions)
+[![Action](https://img.shields.io/badge/Marketplace-promptproof--action-blue?logo=github)](https://github.com/marketplace/actions/promptproof-eval)
+[![npm (CLI)](https://img.shields.io/npm/v/promptproof-cli?label=promptproof-cli)](https://www.npmjs.com/package/promptproof-cli)
+[![npm (SDK)](https://img.shields.io/npm/v/promptproof-sdk-node?label=sdk--node)](https://www.npmjs.com/package/promptproof-sdk-node)
+![node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
+![license](https://img.shields.io/badge/license-MIT-green)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
+
+## Quickstart
+
+### Run locally
+```bash
+npx promptproof-cli@latest eval -c promptproof.yaml --out report
+```
+
+### GitHub Action
+
+```yaml
+# .github/workflows/promptproof.yml
+name: PromptProof
+on: [pull_request]
+permissions: { contents: read, pull-requests: write }
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: promptproof/action@v0
+        with:
+          config: promptproof.yaml
+```
+
+### One‑line recording (Node)
+```ts
+import OpenAI from 'openai'
+import { withPromptProofOpenAI } from 'promptproof-sdk-node/openai'
+const ai = withPromptProofOpenAI(new OpenAI({ apiKey: process.env.OPENAI_API_KEY }), { suite: 'support-replies' })
+```
+
+This writes sanitized JSONL lines to `fixtures/<suite>/outputs*.jsonl` for deterministic CI replay. No network calls during CI.
+
+## Guarantees
+- **Deterministic CI:** replay fixtures offline; **zero** network calls in CI.
+- **Safety by default:** PII redaction on (emails/phones). The SDK never blocks your app if recording fails.
+- **Provider‑agnostic:** we evaluate outputs, not vendors.
+
+## Why not just JSON schema at runtime?
+- We enforce **pre‑merge** gates (block risky PRs), not best‑effort runtime checks.
+- **Replay** of real outputs removes flakiness (no live model calls in CI).
+- **Budgets** catch cost/latency creep alongside quality rules.
+
+## Examples
+- Demo app: `examples/node-support-bot/`
+- Fixtures: `fixtures/` (support replies, RAG, tool calls)
+- Failure Zoo: `zoo/` — real cases with copy‑pasteable rules
+
+## What it looks like
+![Red→Green PR demo](./docs/assets/red-green.gif)
 
 ## 🎯 Key Features
 
@@ -229,6 +287,19 @@ promptproof validate    # Validate fixture schema
 ## 🎪 Failure Zoo
 
 Browse real-world LLM failure cases in our [Failure Zoo](./zoo) - anonymized production incidents with patterns and mitigations.
+
+## 🎭 Demo Project
+
+See our [demo project](./promptproof-demo-project) for a complete working example:
+- **Realistic LLM application** with support & RAG endpoints
+- **SDK integration** with automatic fixture recording
+- **CLI validation** with intentional failure modes
+- **CI/CD integration** via GitHub Actions
+- **Red → Green demonstrations** showing PromptProof in action
+
+## Support & Community
+- Issues: https://github.com/geminimir/promptproof/issues
+- Discussions: [GitHub Discussions](https://github.com/geminimir/promptproof/discussions)
 
 ## 🤝 Contributing
 

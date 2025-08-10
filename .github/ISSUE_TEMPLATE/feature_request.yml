@@ -1,0 +1,84 @@
+name: Feature Request
+description: Suggest an idea for PromptProof
+title: "[Feature] "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please provide as much detail as possible.
+  
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Description
+      description: Clear and concise description of the feature you'd like to see
+      placeholder: "I would like PromptProof to..."
+    validations:
+      required: true
+  
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve?
+      placeholder: "Currently, when I try to..."
+    validations:
+      required: true
+  
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How would you like this feature to work?
+      placeholder: "I think it should work by..."
+    validations:
+      required: true
+  
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What alternatives have you considered?
+      placeholder: "I also considered..."
+  
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      options:
+        - CLI Tool
+        - SDK/Recording
+        - GitHub Action
+        - New Check Type
+        - Documentation
+        - Example/Integration
+        - Other
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Low (nice to have)
+        - Medium (would be helpful)
+        - High (blocking my workflow)
+        - Critical (cannot work without it)
+    validations:
+      required: true
+  
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Use Case
+      description: Describe a specific scenario where this feature would be used
+      placeholder: "When I'm working on a support bot that needs to..."
+  
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other relevant information, examples, or mockups

@@ -85,6 +85,13 @@ body:
       description: Your promptproof.yaml (if relevant)
       render: yaml
   
+  - type: input
+    id: fixture_line
+    attributes:
+      label: Fixture Line (if applicable)
+      description: The specific fixture line number that's failing (e.g., "fixtures/support-replies/outputs.jsonl:47")
+      placeholder: "fixtures/support-replies/outputs.jsonl:47"
+  
   - type: textarea
     id: additional
     attributes:

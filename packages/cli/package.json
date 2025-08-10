@@ -1,15 +1,15 @@
 {
   "name": "promptproof-cli",
-  "version": "0.1.0",
-  "description": "CLI for PromptProof - Deterministic LLM testing",
+  "version": "0.1.0-beta.2",
+  "description": "Deterministic LLM contract checks for CI",
   "bin": {
     "promptproof": "./dist/index.js"
   },
   "main": "dist/index.js",
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+    "node": ">=18"
   },
+  "license": "MIT",
   "scripts": {
     "prebuild": "cd ../evaluator && npm run build",
     "build": "tsc",
@@ -18,7 +18,6 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@promptproof/evaluator": "file:../evaluator",
     "ajv": "^8.12.0",
     "ajv-formats": "^2.1.1",
     "chalk": "^4.1.2",
@@ -38,7 +37,8 @@
   },
   "files": [
     "dist",
-    "templates"
+    "README.md",
+    "LICENSE"
   ],
   "publishConfig": {
     "access": "public"

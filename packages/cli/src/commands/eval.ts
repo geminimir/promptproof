@@ -1,4 +1,4 @@
-import { Evaluator } from '@promptproof/evaluator'
+import { Evaluator } from '../evaluator'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import chalk from 'chalk'
