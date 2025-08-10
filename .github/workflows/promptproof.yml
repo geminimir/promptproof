@@ -1,0 +1,100 @@
+name: PromptProof CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  test-evaluator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Build packages
+        run: npm run build
+      
+      - name: Run tests
+        run: npm test
+  
+  test-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Build CLI
+        run: |
+          cd packages/cli
+          npm run build
+      
+      - name: Test CLI commands
+        run: |
+          cd packages/cli
+          node dist/index.js --version
+          node dist/index.js --help
+  
+  test-action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Test action locally
+        uses: ./packages/action
+        with:
+          config: examples/node-support-bot/promptproof.yaml
+          mode: warn
+  
+  validate-fixtures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install CLI
+        run: |
+          npm install
+          cd packages/cli
+          npm run build
+      
+      - name: Validate fixtures
+        run: |
+          node packages/cli/dist/index.js validate fixtures/support-replies/outputs.jsonl
+  
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Run linter
+        run: npm run lint
+      
+      - name: Check formatting
+        run: npm run format -- --check

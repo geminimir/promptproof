@@ -1,0 +1,50 @@
+{
+  "id": "002",
+  "title": "Recursive Prompt Loop Caused $8,000 Bill",
+  "category": "cost_performance",
+  "severity": "critical",
+  "date_discovered": "2023-12-15",
+  "description": "A code generation assistant entered an infinite loop when asked to 'improve this code recursively', generating 50,000+ tokens before hitting limits.",
+  "impact": {
+    "cost": "$8,342",
+    "api_calls": "1,247",
+    "duration": "4 hours"
+  },
+  "root_cause": "The prompt template included 'keep improving until perfect' without clear termination conditions. Combined with high max_tokens setting and retry logic.",
+  "example_prompt": "Improve this code recursively until it's perfect: [code]. After each improvement, apply the same process to the result.",
+  "detection": {
+    "method": "Billing alert",
+    "time_to_detect": "4 hours",
+    "could_be_automated": true
+  },
+  "prevention": {
+    "promptproof_checks": [
+      {
+        "type": "budget",
+        "config": {
+          "cost_usd_per_run_max": 0.50,
+          "latency_ms_p95_max": 5000
+        },
+        "description": "Would fail CI if any single run exceeds $0.50"
+      },
+      {
+        "type": "numeric_bounds",
+        "target": "metrics.output_tokens",
+        "max": 2000,
+        "description": "Limit output tokens per request"
+      }
+    ],
+    "other_measures": [
+      "Set hard token limits",
+      "Implement circuit breakers",
+      "Add termination conditions",
+      "Monitor usage in real-time"
+    ]
+  },
+  "lessons_learned": [
+    "Always set conservative token limits",
+    "Test prompts with budget constraints",
+    "Implement usage monitoring and alerts",
+    "Avoid open-ended recursive instructions"
+  ]
+}

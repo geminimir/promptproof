@@ -1,0 +1,44 @@
+{
+  "id": "001",
+  "title": "PII Leak in Customer Support Responses",
+  "category": "security_privacy",
+  "severity": "high",
+  "date_discovered": "2024-01-10",
+  "description": "Customer support bot included real customer email addresses and phone numbers from training data in responses to unrelated queries.",
+  "impact": {
+    "users_affected": "~500",
+    "business_impact": "GDPR violation risk, customer trust damage",
+    "duration": "3 days before detection"
+  },
+  "root_cause": "Model was fine-tuned on raw support tickets without PII redaction. When asked about common issues, it would sometimes include real examples with customer contact info.",
+  "example_output": "Based on similar cases, customers like john.doe@example.com (phone: 555-0123) experienced this issue when...",
+  "detection": {
+    "method": "Customer complaint",
+    "time_to_detect": "3 days",
+    "could_be_automated": true
+  },
+  "prevention": {
+    "promptproof_checks": [
+      {
+        "type": "regex_forbidden",
+        "patterns": ["email_regex", "phone_regex"],
+        "description": "Would catch any email or phone pattern in outputs"
+      }
+    ],
+    "other_measures": [
+      "Redact training data",
+      "Use synthetic examples",
+      "Add PII detection to prompt"
+    ]
+  },
+  "lessons_learned": [
+    "Always sanitize training data",
+    "Implement PII detection in CI/CD",
+    "Test with adversarial prompts",
+    "Monitor production outputs"
+  ],
+  "references": [
+    "GDPR Article 32",
+    "NIST Privacy Framework"
+  ]
+}

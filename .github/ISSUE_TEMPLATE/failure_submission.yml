@@ -1,0 +1,102 @@
+name: Submit Failure Case
+description: Share an anonymized LLM failure for the Zoo
+title: "[Zoo] "
+labels: ["zoo-submission", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing to the PromptProof Failure Zoo! Please anonymize all sensitive information.
+  
+  - type: input
+    id: title
+    attributes:
+      label: Failure Title
+      description: Brief, descriptive title
+      placeholder: "e.g., PII Leak in Customer Support Responses"
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Security & Privacy
+        - Cost & Performance
+        - Accuracy & Reliability
+        - Safety & Compliance
+        - Other
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Critical
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+  
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What went wrong? Be specific but anonymized.
+      placeholder: "The model started including..."
+    validations:
+      required: true
+  
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Business impact, users affected, duration, etc.
+      placeholder: "Affected ~1000 users over 3 days..."
+    validations:
+      required: true
+  
+  - type: textarea
+    id: root_cause
+    attributes:
+      label: Root Cause
+      description: Why did this happen?
+      placeholder: "The prompt template didn't include..."
+    validations:
+      required: true
+  
+  - type: textarea
+    id: example
+    attributes:
+      label: Example Output
+      description: Anonymized example of the failure (optional)
+      render: json
+  
+  - type: textarea
+    id: prevention
+    attributes:
+      label: How PromptProof Could Help
+      description: Which checks would catch this?
+      placeholder: "regex_forbidden check for PII patterns..."
+  
+  - type: textarea
+    id: lessons
+    attributes:
+      label: Lessons Learned
+      description: Key takeaways from this incident
+    validations:
+      required: true
+  
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Confirmation
+      options:
+        - label: All information has been anonymized
+          required: true
+        - label: I have permission to share this case
+          required: true

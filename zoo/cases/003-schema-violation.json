@@ -1,0 +1,80 @@
+{
+  "id": "003",
+  "title": "Inconsistent JSON Schema Broke Production API",
+  "category": "accuracy_reliability",
+  "severity": "high",
+  "date_discovered": "2024-01-05",
+  "description": "GPT-4 started returning inconsistent JSON structures after a prompt change, causing 30% of API calls to fail due to parsing errors.",
+  "impact": {
+    "error_rate": "30%",
+    "users_affected": "~10,000",
+    "duration": "6 hours",
+    "revenue_loss": "~$15,000"
+  },
+  "root_cause": "Prompt was modified to add new fields but didn't update the 'always return this exact structure' instruction. Model started mixing old and new schemas randomly.",
+  "example_outputs": {
+    "expected": {
+      "status": "success",
+      "data": {
+        "items": [],
+        "count": 0
+      }
+    },
+    "actual_variations": [
+      {
+        "status": "success",
+        "items": [],
+        "count": 0
+      },
+      {
+        "result": "success",
+        "data": []
+      },
+      {
+        "success": true,
+        "data": {
+          "items": []
+        }
+      }
+    ]
+  },
+  "detection": {
+    "method": "Error monitoring spike",
+    "time_to_detect": "45 minutes",
+    "could_be_automated": true
+  },
+  "prevention": {
+    "promptproof_checks": [
+      {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "required": ["status", "data"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["success", "error"]
+            },
+            "data": {
+              "type": "object",
+              "required": ["items", "count"]
+            }
+          }
+        },
+        "description": "Enforce exact schema structure"
+      }
+    ],
+    "other_measures": [
+      "Use JSON mode when available",
+      "Include schema in system prompt",
+      "Validate outputs before deployment",
+      "A/B test prompt changes"
+    ]
+  },
+  "lessons_learned": [
+    "Always validate JSON schema in CI",
+    "Test with multiple runs to catch inconsistencies",
+    "Version control prompts with schemas",
+    "Monitor schema compliance in production"
+  ]
+}
