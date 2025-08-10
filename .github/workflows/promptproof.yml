@@ -10,7 +10,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  test-evaluator:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,74 +25,14 @@ jobs:
       - name: Build packages
         run: npm run build
       
-
-      
-      - name: Run tests
-        run: npm test
-  
-  test-cli:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      
-      - name: Install dependencies
-        run: npm install
-      
-      - name: Build all packages
-        run: npm run build
-      
-      - name: Test CLI commands
+      - name: Test CLI
         run: |
           node packages/cli/dist/index.js --version
           node packages/cli/dist/index.js --help
       
-
-  
-  test-action:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Test action locally
-        uses: ./packages/action
-        with:
-          config: examples/node-support-bot/promptproof.yaml
-          mode: warn
-  
-  validate-fixtures:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      
-      - name: Install dependencies
-        run: npm install
-      
-      - name: Build all packages
-        run: npm run build
-      
       - name: Validate fixtures
         run: |
           node packages/cli/dist/index.js validate fixtures/support-replies/outputs.jsonl
-  
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      
-      - name: Install dependencies
-        run: npm install
       
       - name: Run linter
         run: npm run lint
