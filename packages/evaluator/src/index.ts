@@ -1,6 +1,5 @@
 import { 
   Check, 
-  CheckConfig, 
   EvaluationResult, 
   FixtureRecord, 
   PolicyConfig, 
