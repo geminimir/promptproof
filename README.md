@@ -19,17 +19,20 @@ PromptProof is a deterministic testing framework that enforces contracts on LLM 
 
 ## 🚀 Quick Start
 
-### Install CLI
+### Install Packages
 
 ```bash
+# Install CLI for evaluation
 npm install -g promptproof-cli@beta
-# or
-npx promptproof-cli@beta init
+
+# Install SDK for recording (in your project)
+npm install promptproof-sdk-node@beta
 ```
 
 ### Initialize in Your Project
 
 ```bash
+# Initialize project structure
 promptproof init --suite support-replies
 ```
 
@@ -46,7 +49,7 @@ This creates:
 
 ```javascript
 import OpenAI from 'openai'
-import { withPromptProofOpenAI } from 'promptproof-sdk-node@beta/openai'
+import { withPromptProofOpenAI } from 'promptproof-sdk-node/openai'
 
 const base = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 export const ai = withPromptProofOpenAI(base, { suite: 'support-replies' })
@@ -62,7 +65,7 @@ const response = await ai.chat.completions.create({
 
 ```javascript
 import Anthropic from '@anthropic-ai/sdk'
-import { withPromptProofAnthropic } from 'promptproof-sdk-node@beta/anthropic'
+import { withPromptProofAnthropic } from 'promptproof-sdk-node/anthropic'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 export const claude = withPromptProofAnthropic(anthropic, { suite: 'rag-answers' })
@@ -78,7 +81,7 @@ const response = await claude.messages.create({
 #### Generic HTTP Integration
 
 ```javascript
-import { wrapFetch } from 'promptproof-sdk-node@beta/http'
+import { wrapFetch } from 'promptproof-sdk-node/http'
 
 // Wrap global fetch to record any LLM API calls
 globalThis.fetch = wrapFetch(globalThis.fetch, { suite: 'generic-llm' })
@@ -205,12 +208,22 @@ promptproof validate    # Validate fixture schema
 ```
 
 > **Note**: Use `npx promptproof-cli@beta` or install globally with `npm install -g promptproof-cli@beta`
+> 
+> **SDK**: Install `promptproof-sdk-node@beta` in your project for automatic fixture recording
 
 ## 📦 Packages
 
+### Core Packages
 - **`promptproof-cli@beta`**: Command-line interface for evaluation
 - **`promptproof-sdk-node@beta`**: SDK wrappers for OpenAI, Anthropic, HTTP
-- **`@promptproof/action`**: GitHub Action for CI integration (coming soon)
+
+### Architecture
+- **CLI**: Evaluates pre-recorded fixtures against contracts
+- **SDK**: Automatically records LLM interactions to fixtures
+- **Workflow**: SDK records → CLI evaluates → CI gates
+
+### Coming Soon
+- **`@promptproof/action`**: GitHub Action for CI integration
 - **`@promptproof/evaluator`**: Core evaluation engine (bundled in CLI)
 
 ## 🎪 Failure Zoo
