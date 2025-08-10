@@ -136,7 +136,14 @@ export async function validateCommand(inputFile: string, options: ValidateOption
   
   // Dynamic import to avoid dependency issues
   const { default: Ajv } = await import('ajv')
-  const ajv = new Ajv({ allErrors: true, verbose: true })
+  const { default: addFormats } = await import('ajv-formats')
+  const ajv = new Ajv({ 
+    allErrors: true, 
+    verbose: true,
+    strictTypes: false,
+    allowUnionTypes: true
+  })
+  addFormats(ajv)
   const validate = ajv.compile(FIXTURE_SCHEMA)
 
   try {

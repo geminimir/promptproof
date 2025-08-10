@@ -16,6 +16,7 @@
   "dependencies": {
     "@promptproof/evaluator": "file:../evaluator",
     "ajv": "^8.12.0",
+    "ajv-formats": "^2.1.1",
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
     "fs-extra": "^11.2.0",
