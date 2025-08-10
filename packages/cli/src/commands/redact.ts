@@ -1,6 +1,7 @@
 import * as fs from 'fs-extra'
 import chalk from 'chalk'
 import ora from 'ora'
+import type { FixtureRecord } from '../types'
 
 export interface RedactOptions {
   emails?: boolean
@@ -126,11 +127,11 @@ export async function redactCommand(inputFile: string, options: RedactOptions): 
   }
 }
 
-function redactRecord(record: any, patterns: Array<{ regex: RegExp, replacement: string }>): any {
+function redactRecord(record: FixtureRecord, patterns: Array<{ regex: RegExp, replacement: string }>): FixtureRecord {
   const redacted = JSON.parse(JSON.stringify(record)) // Deep clone
   
   // Recursively redact all string values
-  function redactValue(obj: any): any {
+  function redactValue(obj: unknown): unknown {
     if (typeof obj === 'string') {
       let result = obj
       for (const pattern of patterns) {
@@ -140,7 +141,7 @@ function redactRecord(record: any, patterns: Array<{ regex: RegExp, replacement:
     } else if (Array.isArray(obj)) {
       return obj.map(redactValue)
     } else if (obj !== null && typeof obj === 'object') {
-      const result: any = {}
+      const result: Record<string, unknown> = {}
       for (const [key, value] of Object.entries(obj)) {
         // Don't redact certain metadata fields
         if (['id', 'timestamp', 'schema_version', 'source'].includes(key)) {

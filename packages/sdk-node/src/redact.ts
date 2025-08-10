@@ -28,7 +28,9 @@ export function redactString(text: string, config: RedactConfig = {}): string {
   return result
 }
 
-export function redactRecord(record: any, config: RedactConfig = {}): void {
+import type { FixtureRecord } from './types.js'
+
+export function redactRecord(record: FixtureRecord, config: RedactConfig = {}): void {
   // Redact input prompt
   if (record.input?.prompt) {
     record.input.prompt = redactString(record.input.prompt, config)

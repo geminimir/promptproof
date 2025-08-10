@@ -11,15 +11,15 @@ export interface FixtureRecord {
       model: string
       temperature?: number
       max_tokens?: number
-      [key: string]: any
+      [key: string]: unknown
     }
   }
   output: {
     text?: string
-    json?: any
+    json?: unknown
     tool_calls?: Array<{
       name: string
-      arguments: any
+      arguments: unknown
     }>
   }
   metrics: {
@@ -32,7 +32,7 @@ export interface FixtureRecord {
     status: 'raw' | 'sanitized'
     methods?: string[]
   }
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface PolicyConfig {
@@ -59,12 +59,12 @@ export interface CheckConfig {
   target: string
   enabled?: boolean
   // Type-specific config
-  schema?: any // for json_schema
+  schema?: unknown // for json_schema
   patterns?: string[] // for regex checks
   min?: number // for numeric_bounds
   max?: number // for numeric_bounds
   module?: string // for custom_fn
-  config?: any // additional check-specific config
+  config?: unknown // additional check-specific config
 }
 
 export interface Violation {
@@ -78,7 +78,7 @@ export interface Violation {
 
 export interface CheckContext {
   record: FixtureRecord
-  selectors: Record<string, any>
+  selectors: Record<string, unknown>
   config: CheckConfig
 }
 

@@ -1,9 +1,16 @@
 import { generateId } from './ids.js'
 import { redactRecord } from './redact.js'
 import { FixtureWriter } from './writer.js'
-import { PromptProofOptions } from './openai.js'
+import type { PromptProofOptions, FixtureRecord } from './types.js'
 
-function isLLMRequest(url: string, headers: Headers): boolean {
+// Type declarations for fetch API
+interface FetchRequestInit {
+  method?: string
+  headers?: Record<string, string> | string[][]
+  body?: string
+}
+
+function isLLMRequest(url: string, _headers: Headers): boolean {
   // Detect common LLM API endpoints
   const llmPatterns = [
     /api\.openai\.com\/v1\/chat\/completions/,
@@ -15,7 +22,7 @@ function isLLMRequest(url: string, headers: Headers): boolean {
   return llmPatterns.some(pattern => pattern.test(url))
 }
 
-function extractLLMOutput(responseText: string): any {
+function extractLLMOutput(responseText: string): { text?: string; tool_calls?: Array<{ name: string; arguments: unknown }> } {
   try {
     const parsed = JSON.parse(responseText)
     
@@ -31,8 +38,8 @@ function extractLLMOutput(responseText: string): any {
     if (parsed.content) {
       if (Array.isArray(parsed.content)) {
         const textParts = parsed.content
-          .filter((item: any) => item.type === 'text')
-          .map((item: any) => item.text)
+          .filter((item: { type: string; text: string }) => item.type === 'text')
+          .map((item: { type: string; text: string }) => item.text)
           .join('')
         return { text: textParts }
       }
@@ -61,7 +68,7 @@ export function wrapFetch(originalFetch: typeof fetch, options: PromptProofOptio
     outputDir: options.outputDir
   })
   
-  return async function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  return async function(input: string | URL, init?: FetchRequestInit): Promise<Response> {
     const url = typeof input === 'string' ? input : input.toString()
     const headers = new Headers(init?.headers)
     
@@ -97,7 +104,7 @@ export function wrapFetch(originalFetch: typeof fetch, options: PromptProofOptio
       const timestamp = new Date().toISOString()
       const prompt = init?.body ? String(init.body) : ''
       
-      const record = {
+      const record: FixtureRecord = {
         schema_version: 'pp.v1',
         id: generateId(prompt, url, timestamp),
         timestamp,
@@ -135,7 +142,7 @@ export function wrapFetch(originalFetch: typeof fetch, options: PromptProofOptio
       return response
     } catch (error) {
       // Don't interfere with errors
-      throw error
+      return Promise.reject(error)
     }
   }
 }

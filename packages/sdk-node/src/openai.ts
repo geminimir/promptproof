@@ -1,31 +1,26 @@
 import { generateId } from './ids.js'
 import { redactRecord } from './redact.js'
 import { FixtureWriter } from './writer.js'
+import type { PromptProofOptions, OpenAIClient, OpenAIResponse, FixtureRecord } from './types.js'
 
-export interface PromptProofOptions {
-  suite: string
-  source?: string
-  sampleRate?: number
-  redact?: boolean
-  outputDir?: string
-}
 
-function formatMessages(messages: any[]): string {
+
+function formatMessages(messages: unknown[]): string {
   return messages.map(m => `${m.role}: ${m.content}`).join('\n')
 }
 
-function extractOutput(response: any): any {
+function extractOutput(response: OpenAIResponse): { text?: string; tool_calls?: Array<{ name: string; arguments: unknown }> } {
   const choice = response.choices?.[0]
   if (!choice) return { text: '' }
   
-  const output: any = {}
+  const output: { text?: string; tool_calls?: Array<{ name: string; arguments: unknown }> } = {}
   
   if (choice.message?.content) {
     output.text = choice.message.content
   }
   
   if (choice.message?.tool_calls) {
-    output.tool_calls = choice.message.tool_calls.map((tc: any) => ({
+    output.tool_calls = choice.message.tool_calls.map((tc: { function?: { name: string; arguments: unknown } }) => ({
       name: tc.function?.name,
       arguments: tc.function?.arguments
     }))
@@ -34,7 +29,7 @@ function extractOutput(response: any): any {
   return output
 }
 
-function calculateCost(model: string, usage: any): number {
+function calculateCost(model: string, usage: OpenAIResponse['usage']): number {
   // Basic cost calculation - can be enhanced later
   if (!usage) return 0
   
@@ -48,7 +43,7 @@ function calculateCost(model: string, usage: any): number {
   return (inputTokens * inputCostPer1k / 1000) + (outputTokens * outputCostPer1k / 1000)
 }
 
-export function withPromptProofOpenAI(client: any, options: PromptProofOptions) {
+export function withPromptProofOpenAI(client: OpenAIClient, options: PromptProofOptions) {
   const shouldRecord = process.env.PP_RECORD !== '0' && (process.env.PP_RECORD === '1' || process.env.NODE_ENV === 'development')
   const sampleRate = options.sampleRate || parseFloat(process.env.PP_SAMPLE_RATE || '1')
   const source = options.source || process.env.PP_SOURCE || process.env.NODE_ENV || 'dev'
@@ -78,14 +73,14 @@ export function withPromptProofOpenAI(client: any, options: PromptProofOptions) 
             get(comp, method) {
               if (method !== 'create') return comp[method]
               
-              return async function(this: any, ...args: any[]) {
+              return async function(this: unknown, ...args: unknown[]) {
                 // Decide whether to record this call
                 if (Math.random() > sampleRate) {
                   return comp.create.apply(this, args)
                 }
 
                 const startTime = Date.now()
-                const params = args[0] || {}
+                const params = (args[0] as Record<string, unknown>) || {}
                 
                 try {
                   // Call original method
@@ -94,9 +89,9 @@ export function withPromptProofOpenAI(client: any, options: PromptProofOptions) 
                   
                   // Create fixture record
                   const timestamp = new Date().toISOString()
-                  const prompt = formatMessages(params.messages || [])
+                  const prompt = formatMessages((params.messages as unknown[]) || [])
                   
-                  const record = {
+                  const record: FixtureRecord = {
                     schema_version: 'pp.v1',
                     id: generateId(prompt, params.model || 'unknown', timestamp),
                     timestamp,
@@ -140,7 +135,7 @@ export function withPromptProofOpenAI(client: any, options: PromptProofOptions) 
                   return response
                 } catch (error) {
                   // Don't interfere with errors
-                  throw error
+                  return Promise.reject(error)
                 }
               }
             }

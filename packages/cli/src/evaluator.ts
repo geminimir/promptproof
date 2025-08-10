@@ -1,4 +1,4 @@
-import { Check, CheckConfig, EvaluationResult, FixtureRecord, PolicyConfig, Violation } from './types'
+import { Check, EvaluationResult, FixtureRecord, PolicyConfig, Violation } from './types'
 import { JsonSchemaCheck } from './checks/json_schema'
 import { RegexRequiredCheck } from './checks/regex_required'
 import { RegexForbiddenCheck } from './checks/regex_forbidden'
@@ -83,11 +83,11 @@ export class Evaluator {
         }
 
         try {
-          const violations = await check.run({
-            record: fixture,
-            selectors,
-            config: checkConfig,
-          })
+                  const violations = await check.run({
+          record: fixture,
+          selectors: selectors as Record<string, unknown>,
+          config: checkConfig,
+        })
           fixtureViolations.push(...violations)
         } catch (error) {
           fixtureViolations.push({

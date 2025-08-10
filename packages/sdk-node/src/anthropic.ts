@@ -1,21 +1,21 @@
 import { generateId } from './ids.js'
 import { redactRecord } from './redact.js'
 import { FixtureWriter } from './writer.js'
-import { PromptProofOptions } from './openai.js'
+import type { PromptProofOptions, AnthropicClient, AnthropicResponse, FixtureRecord } from './types.js'
 
-function formatMessages(messages: any[]): string {
+function formatMessages(messages: unknown[]): string {
   return messages.map(m => `${m.role}: ${m.content}`).join('\n')
 }
 
-function extractOutput(response: any): any {
-  const output: any = {}
+function extractOutput(response: AnthropicResponse): { text?: string } {
+      const output: { text?: string } = {}
   
   if (response.content) {
     if (Array.isArray(response.content)) {
       // Handle array of content blocks
       const textParts = response.content
-        .filter((item: any) => item.type === 'text')
-        .map((item: any) => item.text)
+        .filter((item: { type: string; text: string }) => item.type === 'text')
+        .map((item: { type: string; text: string }) => item.text)
         .join('')
       output.text = textParts
     } else if (typeof response.content === 'string') {
@@ -26,8 +26,8 @@ function extractOutput(response: any): any {
   // Handle tool calls if present
   if (response.content) {
     const toolCalls = response.content
-      .filter((item: any) => item.type === 'tool_use')
-      .map((item: any) => ({
+      .filter((item: { type: string; name: string; input: unknown }) => item.type === 'tool_use')
+      .map((item: { type: string; name: string; input: unknown }) => ({
         name: item.name,
         arguments: item.input
       }))
@@ -51,7 +51,7 @@ function calculateCost(model: string, inputTokens: number, outputTokens: number)
   return (inputTokens * inputCostPer1k / 1000) + (outputTokens * outputCostPer1k / 1000)
 }
 
-export function withPromptProofAnthropic(client: any, options: PromptProofOptions) {
+export function withPromptProofAnthropic(client: AnthropicClient, options: PromptProofOptions) {
   const shouldRecord = process.env.PP_RECORD !== '0' && (process.env.PP_RECORD === '1' || process.env.NODE_ENV === 'development')
   const sampleRate = options.sampleRate || parseFloat(process.env.PP_SAMPLE_RATE || '1')
   const source = options.source || process.env.PP_SOURCE || process.env.NODE_ENV || 'dev'
@@ -75,14 +75,14 @@ export function withPromptProofAnthropic(client: any, options: PromptProofOption
         get(messages, method) {
           if (method !== 'create') return messages[method]
           
-          return async function(this: any, ...args: any[]) {
+          return async function(this: unknown, ...args: unknown[]) {
             // Decide whether to record this call
             if (Math.random() > sampleRate) {
               return orig.create.apply(this, args)
             }
 
             const startTime = Date.now()
-            const params = args[0] || {}
+            const params = (args[0] as Record<string, unknown>) || {}
             
             try {
               // Call original method
@@ -91,9 +91,9 @@ export function withPromptProofAnthropic(client: any, options: PromptProofOption
               
               // Create fixture record
               const timestamp = new Date().toISOString()
-              const prompt = formatMessages(params.messages || [])
+              const prompt = formatMessages((params.messages as unknown[]) || [])
               
-              const record = {
+              const record: FixtureRecord = {
                 schema_version: 'pp.v1',
                 id: generateId(prompt, params.model || 'unknown', timestamp),
                 timestamp,
@@ -135,7 +135,7 @@ export function withPromptProofAnthropic(client: any, options: PromptProofOption
               return response
             } catch (error) {
               // Don't interfere with errors
-              throw error
+              return Promise.reject(error)
             }
           }
         }

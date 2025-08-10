@@ -1,6 +1,7 @@
 import * as fs from 'fs-extra'
 import chalk from 'chalk'
 import ora from 'ora'
+import type { FixtureRecord } from '../types'
 
 export interface ValidateOptions {
   verbose?: boolean
@@ -157,13 +158,13 @@ export async function validateCommand(inputFile: string, options: ValidateOption
     
     let valid = 0
     let invalid = 0
-    const errors: Array<{ line: number, errors: any[] }> = []
+    const errors: Array<{ line: number, errors: Array<{ message?: string; instancePath?: string; dataPath?: string }> }> = []
 
     for (let i = 0; i < lines.length; i++) {
       spinner.text = `Validating record ${i + 1} of ${lines.length}...`
       
       try {
-        const record: any = JSON.parse(lines[i])
+        const record: FixtureRecord = JSON.parse(lines[i])
         
         if (validate(record)) {
           // Additional checks

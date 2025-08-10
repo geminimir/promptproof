@@ -2,6 +2,7 @@ import * as fs from 'fs-extra'
 import * as path from 'path'
 import chalk from 'chalk'
 import ora from 'ora'
+import type { FixtureRecord } from '../types'
 
 export interface PromoteOptions {
   suite: string
@@ -64,9 +65,59 @@ export async function promoteCommand(inputFile: string, options: PromoteOptions)
   }
 }
 
-async function promoteRecord(record: any, options: PromoteOptions): Promise<any | null> {
+interface OpenAIRecord {
+  model: string
+  choices: Array<{
+    message?: { content: string; tool_calls?: unknown[] }
+    text?: string
+  }>
+  created?: number
+  messages?: Array<{ content: string }>
+  temperature?: number
+  max_tokens?: number
+  usage?: {
+    prompt_tokens?: number
+    completion_tokens?: number
+  }
+}
+
+interface AnthropicRecord {
+  model: string
+  content: Array<{ type: string; text: string }>
+  messages?: Array<{ content: string }>
+  temperature?: number
+  max_tokens?: number
+  usage?: {
+    input_tokens?: number
+    output_tokens?: number
+  }
+}
+
+interface GenericRecord {
+  id?: string
+  timestamp?: string
+  request: {
+    prompt?: string
+    messages?: string
+    model?: string
+    params?: Record<string, unknown>
+  }
+  response: {
+    text?: string
+    json?: unknown
+    tool_calls?: unknown[]
+    latency_ms?: number
+    cost?: number
+    input_tokens?: number
+    output_tokens?: number
+  }
+  latency_ms?: number
+  cost?: number
+}
+
+async function promoteRecord(record: OpenAIRecord | AnthropicRecord | GenericRecord, options: PromoteOptions): Promise<FixtureRecord | null> {
   // Try to detect format and convert
-  let promoted: any = null
+  let promoted: FixtureRecord | null = null
 
   // OpenAI format
   if (record.model && record.choices) {
@@ -76,7 +127,7 @@ async function promoteRecord(record: any, options: PromoteOptions): Promise<any 
       timestamp: record.created ? new Date(record.created * 1000).toISOString() : new Date().toISOString(),
       source: options.label || 'production',
       input: {
-        prompt: record.messages?.map((m: any) => m.content).join('\n') || '',
+        prompt: record.messages?.map((m: { content: string }) => m.content).join('\n') || '',
         params: {
           model: record.model,
           temperature: record.temperature,
@@ -107,7 +158,7 @@ async function promoteRecord(record: any, options: PromoteOptions): Promise<any 
       timestamp: new Date().toISOString(),
       source: options.label || 'production',
       input: {
-        prompt: record.messages?.map((m: any) => m.content).join('\n') || '',
+        prompt: record.messages?.map((m: { content: string }) => m.content).join('\n') || '',
         params: {
           model: record.model,
           temperature: record.temperature,
@@ -115,7 +166,7 @@ async function promoteRecord(record: any, options: PromoteOptions): Promise<any 
         }
       },
       output: {
-        text: record.content.find((c: any) => c.type === 'text')?.text
+        text: record.content.find((c: { type: string; text: string }) => c.type === 'text')?.text
       },
       metrics: {
         latency_ms: 0,
@@ -173,7 +224,7 @@ function generateId(): string {
   return Math.random().toString(36).substring(2, 10)
 }
 
-function estimateCost(record: any): number {
+function estimateCost(record: OpenAIRecord | AnthropicRecord | GenericRecord): number {
   // Simple cost estimation based on model and tokens
   const costs: Record<string, { input: number, output: number }> = {
     'gpt-4': { input: 0.00003, output: 0.00006 },

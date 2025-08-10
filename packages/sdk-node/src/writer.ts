@@ -1,11 +1,8 @@
-import { writeFileSync, appendFileSync, mkdirSync, existsSync } from 'fs'
+import { appendFileSync, mkdirSync, existsSync } from 'fs'
 import { dirname } from 'path'
+import type { WriterOptions, FixtureRecord } from './types.js'
 
-export interface WriterOptions {
-  suite: string
-  outputDir?: string
-  shardByPid?: boolean
-}
+
 
 export class FixtureWriter {
   private outputPath: string
@@ -24,7 +21,7 @@ export class FixtureWriter {
     }
   }
   
-  writeRecord(record: any): void {
+  writeRecord(record: FixtureRecord): void {
     try {
       const line = JSON.stringify(record) + '\n'
       appendFileSync(this.outputPath, line)

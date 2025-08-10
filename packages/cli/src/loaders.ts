@@ -94,9 +94,9 @@ export class FixtureLoader {
   /**
    * Resolve a selector path on a record
    */
-  static resolveSelector(record: FixtureRecord, selectorPath: string): any {
+  static resolveSelector(record: FixtureRecord, selectorPath: string): unknown {
     const parts = selectorPath.split('.')
-    let current: any = record
+    let current: unknown = record
 
     for (const part of parts) {
       if (current === undefined || current === null) {
@@ -111,8 +111,8 @@ export class FixtureLoader {
   /**
    * Resolve all selectors for a record
    */
-  static resolveSelectors(record: FixtureRecord, selectors: Record<string, string | undefined>): Record<string, any> {
-    const resolved: Record<string, any> = {}
+  static resolveSelectors(record: FixtureRecord, selectors: Record<string, string | undefined>): Record<string, unknown> {
+    const resolved: Record<string, unknown> = {}
 
     for (const [key, path] of Object.entries(selectors)) {
       if (path) {
