@@ -13,7 +13,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@promptproof/evaluator": "^0.1.0",
+    "@promptproof/evaluator": "file:../evaluator",
+    "ajv": "^8.12.0",
     "chalk": "^5.3.0",
     "commander": "^11.1.0",
     "fs-extra": "^11.2.0",

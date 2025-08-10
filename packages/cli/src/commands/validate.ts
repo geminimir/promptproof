@@ -1,7 +1,6 @@
 import * as fs from 'fs-extra'
 import chalk from 'chalk'
 import ora from 'ora'
-import Ajv from 'ajv'
 
 export interface ValidateOptions {
   verbose?: boolean
@@ -134,6 +133,9 @@ const FIXTURE_SCHEMA = {
 
 export async function validateCommand(inputFile: string, options: ValidateOptions): Promise<void> {
   const spinner = ora('Validating fixtures...').start()
+  
+  // Dynamic import to avoid dependency issues
+  const { default: Ajv } = await import('ajv')
   const ajv = new Ajv({ allErrors: true, verbose: true })
   const validate = ajv.compile(FIXTURE_SCHEMA)
 
@@ -154,11 +156,11 @@ export async function validateCommand(inputFile: string, options: ValidateOption
       spinner.text = `Validating record ${i + 1} of ${lines.length}...`
       
       try {
-        const record = JSON.parse(lines[i])
+        const record: any = JSON.parse(lines[i])
         
         if (validate(record)) {
           // Additional checks
-          if (record.redaction.status !== 'sanitized') {
+          if (record.redaction && (record.redaction as any).status !== 'sanitized') {
             errors.push({
               line: i + 1,
               errors: [{
