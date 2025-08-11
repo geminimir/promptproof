@@ -14,7 +14,7 @@
     "prebuild": "cd ../evaluator && npm run build",
     "build": "tsc",
     "dev": "ts-node src/index.ts",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "clean": "rm -rf dist"
   },
   "dependencies": {
