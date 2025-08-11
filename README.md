@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: promptproof/action@v0
+      - uses: geminimir/promptproof-action@v0
         with:
           config: promptproof.yaml
 ```
@@ -314,4 +314,4 @@ MIT License - see [LICENSE](./LICENSE) for details.
 - [GitHub Repository](https://github.com/geminimir/promptproof)
 - [CLI Package](https://www.npmjs.com/package/promptproof-cli) (`@beta`)
 - [SDK Package](https://www.npmjs.com/package/promptproof-sdk-node) (`@beta`)
-- [GitHub Action](https://github.com/geminimir/promptproof) (coming soon)
+- [GitHub Action](https://github.com/geminimir/promptproof-action)

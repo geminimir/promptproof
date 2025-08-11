@@ -1,4 +1,0 @@
-schema_version: pp.v1
-fixtures: example/fixtures/outputs.jsonl
-checks: []
-mode: warn
