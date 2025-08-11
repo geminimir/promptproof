@@ -4,8 +4,10 @@ import { FixtureWriter } from './writer.js'
 import type { PromptProofOptions, FixtureRecord } from './types.js'
 
 // Type declarations for fetch API
-type FetchRequestInit = RequestInit & {
-  headers?: HeadersInit
+interface FetchRequestInit {
+  method?: string
+  headers?: Record<string, string> | string[][]
+  body?: string
 }
 
 function isLLMRequest(url: string, _headers: Headers): boolean {
@@ -66,25 +68,25 @@ export function wrapFetch(originalFetch: typeof fetch, options: PromptProofOptio
     outputDir: options.outputDir
   })
   
-  return async function(input: string | URL | Request, init?: FetchRequestInit): Promise<Response> {
-    const url = typeof input === 'string' || input instanceof URL ? input.toString() : (input as Request).url
-    const headers = new Headers(init?.headers as HeadersInit)
+  return async function(input: string | URL, init?: FetchRequestInit): Promise<Response> {
+    const url = typeof input === 'string' ? input : input.toString()
+    const headers = new Headers(init?.headers as any)
     
     // Only record LLM API calls
     if (!isLLMRequest(url, headers)) {
-      return originalFetch(input as any, init)
+      return originalFetch(input, init as any)
     }
     
     // Decide whether to record this call
     if (Math.random() > sampleRate) {
-      return originalFetch(input as any, init)
+      return originalFetch(input, init as any)
     }
     
     const startTime = Date.now()
     
     try {
       // Call original fetch
-      const response = await originalFetch(input as any, init as RequestInit)
+      const response = await originalFetch(input, init as any)
       const endTime = Date.now()
       
       // Clone response to read body
