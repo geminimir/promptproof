@@ -3,7 +3,7 @@ import * as path from 'path'
 import * as crypto from 'crypto'
 import chalk from 'chalk'
 import ora from 'ora'
-import { EvaluationResult, PolicyConfig } from '../types'
+import { PolicyConfig } from '../types'
 import { Evaluator } from '../evaluator'
 import { execSync } from 'child_process'
 
