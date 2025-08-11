@@ -93,11 +93,11 @@ export async function redactCommand(inputFile: string, options: RedactOptions): 
         
         // Update redaction status
         if (!redactedRecord.redaction) {
-          redactedRecord.redaction = {}
+          redactedRecord.redaction = { status: 'raw' }
         }
         redactedRecord.redaction.status = 'sanitized'
         redactedRecord.redaction.methods = patterns.map(p => p.name)
-        redactedRecord.redaction.timestamp = new Date().toISOString()
+        ;(redactedRecord.redaction as any).timestamp = new Date().toISOString()
         
         outputRecords.push(JSON.stringify(redactedRecord))
         redactedCount++

@@ -102,7 +102,12 @@ export class FixtureLoader {
       if (current === undefined || current === null) {
         return undefined
       }
-      current = current[part]
+      if (typeof current === 'object') {
+        const obj = current as Record<string, unknown>
+        current = obj[part]
+      } else {
+        return undefined
+      }
     }
 
     return current

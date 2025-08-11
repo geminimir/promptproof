@@ -4,39 +4,31 @@ import { FixtureWriter } from './writer.js'
 import type { PromptProofOptions, AnthropicClient, AnthropicResponse, FixtureRecord } from './types.js'
 
 function formatMessages(messages: unknown[]): string {
-  return messages.map(m => `${m.role}: ${m.content}`).join('\n')
+  return messages
+    .map((m: any) => `${m.role}: ${m.content}`)
+    .join('\n')
 }
 
-function extractOutput(response: AnthropicResponse): { text?: string } {
-      const output: { text?: string } = {}
-  
-  if (response.content) {
-    if (Array.isArray(response.content)) {
-      // Handle array of content blocks
-      const textParts = response.content
-        .filter((item: { type: string; text: string }) => item.type === 'text')
-        .map((item: { type: string; text: string }) => item.text)
+function extractOutput(response: AnthropicResponse): { text?: string; tool_calls?: Array<{ name: string; arguments: unknown }> } {
+  const output: { text?: string; tool_calls?: Array<{ name: string; arguments: unknown }> } = {}
+  const content: any = (response as any).content
+
+  if (content) {
+    if (Array.isArray(content)) {
+      const textParts = content
+        .filter((item: any) => item.type === 'text')
+        .map((item: any) => item.text)
         .join('')
-      output.text = textParts
-    } else if (typeof response.content === 'string') {
-      output.text = response.content
+      if (textParts) output.text = textParts
+      const toolCalls = content
+        .filter((item: any) => item.type === 'tool_use')
+        .map((item: any) => ({ name: item.name, arguments: item.input }))
+      if (toolCalls.length > 0) output.tool_calls = toolCalls
+    } else if (typeof content === 'string') {
+      output.text = content
     }
   }
-  
-  // Handle tool calls if present
-  if (response.content) {
-    const toolCalls = response.content
-      .filter((item: { type: string; name: string; input: unknown }) => item.type === 'tool_use')
-      .map((item: { type: string; name: string; input: unknown }) => ({
-        name: item.name,
-        arguments: item.input
-      }))
-    
-    if (toolCalls.length > 0) {
-      output.tool_calls = toolCalls
-    }
-  }
-  
+
   return output
 }
 
@@ -65,16 +57,13 @@ export function withPromptProofAnthropic(client: AnthropicClient, options: Promp
     outputDir: options.outputDir
   })
   
-  return new Proxy(client, {
-    get(target, prop) {
+  return new Proxy(client as any, {
+    get(target: any, prop: string | symbol) {
       const orig = target[prop]
-      
       if (prop !== 'messages') return orig
-      
-      return new Proxy(orig, {
-        get(messages, method) {
+      return new Proxy(orig as any, {
+        get(messages: any, method: string | symbol) {
           if (method !== 'create') return messages[method]
-          
           return async function(this: unknown, ...args: unknown[]) {
             // Decide whether to record this call
             if (Math.random() > sampleRate) {
@@ -82,11 +71,11 @@ export function withPromptProofAnthropic(client: AnthropicClient, options: Promp
             }
 
             const startTime = Date.now()
-            const params = (args[0] as Record<string, unknown>) || {}
+            const params = (args[0] as Record<string, any>) || {}
             
             try {
               // Call original method
-              const response = await orig.create.apply(this, args)
+              const response: any = await orig.create.apply(this, args)
               const endTime = Date.now()
               
               // Create fixture record
@@ -110,11 +99,11 @@ export function withPromptProofAnthropic(client: AnthropicClient, options: Promp
                   }
                 },
                 output: extractOutput(response),
-                metrics: {
+                 metrics: {
                   latency_ms: endTime - startTime,
-                  cost_usd: calculateCost(params.model, response.usage?.input_tokens || 0, response.usage?.output_tokens || 0),
-                  input_tokens: response.usage?.input_tokens,
-                  output_tokens: response.usage?.output_tokens,
+                   cost_usd: calculateCost(params.model || 'unknown', response.usage?.input_tokens || 0, response.usage?.output_tokens || 0),
+                   input_tokens: response.usage?.input_tokens,
+                   output_tokens: response.usage?.output_tokens,
                   total_tokens: (response.usage?.input_tokens || 0) + (response.usage?.output_tokens || 0)
                 },
                 labels: [],

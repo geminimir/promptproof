@@ -66,6 +66,7 @@ export async function promoteCommand(inputFile: string, options: PromoteOptions)
 }
 
 interface OpenAIRecord {
+  id?: string
   model: string
   choices: Array<{
     message?: { content: string; tool_calls?: unknown[] }
@@ -82,6 +83,7 @@ interface OpenAIRecord {
 }
 
 interface AnthropicRecord {
+  id?: string
   model: string
   content: Array<{ type: string; text: string }>
   messages?: Array<{ content: string }>
@@ -119,30 +121,47 @@ async function promoteRecord(record: OpenAIRecord | AnthropicRecord | GenericRec
   // Try to detect format and convert
   let promoted: FixtureRecord | null = null
 
+  function normalizeToolCalls(input: unknown): Array<{ name: string; arguments: unknown }> | undefined {
+    if (!Array.isArray(input)) return undefined
+    const mapped = (input as unknown[])
+      .map((tc: any) => {
+        if (tc?.function?.name) {
+          return { name: tc.function.name as string, arguments: tc.function.arguments }
+        }
+        if (typeof tc?.name === 'string') {
+          return { name: tc.name, arguments: tc.arguments }
+        }
+        return undefined
+      })
+      .filter((x): x is { name: string; arguments: unknown } => Boolean(x))
+    return mapped.length ? mapped : undefined
+  }
+
   // OpenAI format
-  if (record.model && record.choices) {
+  if (typeof (record as any).model === 'string' && Array.isArray((record as any).choices)) {
+    const r = record as OpenAIRecord & { id?: string; created?: number }
     promoted = {
       schema_version: 'pp.v1',
-      id: record.id || generateId(),
-      timestamp: record.created ? new Date(record.created * 1000).toISOString() : new Date().toISOString(),
+      id: r.id || generateId(),
+      timestamp: r.created ? new Date(r.created * 1000).toISOString() : new Date().toISOString(),
       source: options.label || 'production',
       input: {
-        prompt: record.messages?.map((m: { content: string }) => m.content).join('\n') || '',
+        prompt: r.messages?.map((m: { content: string }) => m.content).join('\n') || '',
         params: {
-          model: record.model,
-          temperature: record.temperature,
-          max_tokens: record.max_tokens
+          model: r.model,
+          temperature: r.temperature,
+          max_tokens: r.max_tokens
         }
       },
       output: {
-        text: record.choices[0]?.message?.content || record.choices[0]?.text,
-        tool_calls: record.choices[0]?.message?.tool_calls
+        text: r.choices[0]?.message?.content || r.choices[0]?.text,
+        tool_calls: normalizeToolCalls(r.choices[0]?.message?.tool_calls)
       },
       metrics: {
         latency_ms: 0, // Not available in OpenAI response
-        cost_usd: estimateCost(record),
-        input_tokens: record.usage?.prompt_tokens,
-        output_tokens: record.usage?.completion_tokens
+        cost_usd: estimateCost(r),
+        input_tokens: r.usage?.prompt_tokens,
+        output_tokens: r.usage?.completion_tokens
       },
       redaction: {
         status: 'sanitized',
@@ -151,28 +170,29 @@ async function promoteRecord(record: OpenAIRecord | AnthropicRecord | GenericRec
     }
   }
   // Anthropic format
-  else if (record.model && record.content && Array.isArray(record.content)) {
+  else if (typeof (record as any).model === 'string' && Array.isArray((record as any).content)) {
+    const r = record as AnthropicRecord & { id?: string }
     promoted = {
       schema_version: 'pp.v1',
-      id: record.id || generateId(),
+      id: r.id || generateId(),
       timestamp: new Date().toISOString(),
       source: options.label || 'production',
       input: {
-        prompt: record.messages?.map((m: { content: string }) => m.content).join('\n') || '',
+        prompt: r.messages?.map((m: { content: string }) => m.content).join('\n') || '',
         params: {
-          model: record.model,
-          temperature: record.temperature,
-          max_tokens: record.max_tokens
+          model: r.model,
+          temperature: r.temperature,
+          max_tokens: r.max_tokens
         }
       },
       output: {
-        text: record.content.find((c: { type: string; text: string }) => c.type === 'text')?.text
+        text: r.content.find((c: { type: string; text: string }) => c.type === 'text')?.text
       },
       metrics: {
         latency_ms: 0,
-        cost_usd: estimateCost(record),
-        input_tokens: record.usage?.input_tokens,
-        output_tokens: record.usage?.output_tokens
+        cost_usd: estimateCost(r),
+        input_tokens: r.usage?.input_tokens,
+        output_tokens: r.usage?.output_tokens
       },
       redaction: {
         status: 'sanitized',
@@ -181,29 +201,30 @@ async function promoteRecord(record: OpenAIRecord | AnthropicRecord | GenericRec
     }
   }
   // Generic format with request/response
-  else if (record.request && record.response) {
+  else if (typeof (record as any).request === 'object' && typeof (record as any).response === 'object') {
+    const r = record as GenericRecord
     promoted = {
       schema_version: 'pp.v1',
-      id: record.id || generateId(),
-      timestamp: record.timestamp || new Date().toISOString(),
+      id: r.id || generateId(),
+      timestamp: r.timestamp || new Date().toISOString(),
       source: options.label || 'production',
       input: {
-        prompt: record.request.prompt || record.request.messages || '',
+        prompt: r.request.prompt || r.request.messages || '',
         params: {
-          model: record.request.model || 'unknown',
-          ...record.request.params
+          model: r.request.model || 'unknown',
+          ...r.request.params
         }
       },
       output: {
-        text: record.response.text,
-        json: record.response.json,
-        tool_calls: record.response.tool_calls
+        text: r.response.text,
+        json: r.response.json,
+        tool_calls: normalizeToolCalls(r.response.tool_calls)
       },
       metrics: {
-        latency_ms: record.latency_ms || record.response.latency_ms || 0,
-        cost_usd: record.cost || record.response.cost || 0,
-        input_tokens: record.response.input_tokens,
-        output_tokens: record.response.output_tokens
+        latency_ms: r.latency_ms || r.response.latency_ms || 0,
+        cost_usd: r.cost || r.response.cost || 0,
+        input_tokens: r.response.input_tokens,
+        output_tokens: r.response.output_tokens
       },
       redaction: {
         status: 'sanitized',
@@ -235,7 +256,7 @@ function estimateCost(record: OpenAIRecord | AnthropicRecord | GenericRecord): n
     'claude-3-haiku': { input: 0.00000025, output: 0.00000125 }
   }
 
-  const model = record.model?.toLowerCase() || ''
+  const model = (typeof (record as any).model === 'string' ? ((record as any).model as string).toLowerCase() : '')
   let costConfig = { input: 0.00001, output: 0.00002 } // Default
 
   for (const [key, value] of Object.entries(costs)) {
@@ -245,8 +266,9 @@ function estimateCost(record: OpenAIRecord | AnthropicRecord | GenericRecord): n
     }
   }
 
-  const inputTokens = record.usage?.prompt_tokens || record.usage?.input_tokens || 0
-  const outputTokens = record.usage?.completion_tokens || record.usage?.output_tokens || 0
+  const usage = (record as any).usage || {}
+  const inputTokens = usage.prompt_tokens ?? usage.input_tokens ?? 0
+  const outputTokens = usage.completion_tokens ?? usage.output_tokens ?? 0
 
   return (inputTokens * costConfig.input) + (outputTokens * costConfig.output)
 }

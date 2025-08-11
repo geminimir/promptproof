@@ -6,11 +6,13 @@ import type { PromptProofOptions, OpenAIClient, OpenAIResponse, FixtureRecord } 
 
 
 function formatMessages(messages: unknown[]): string {
-  return messages.map(m => `${m.role}: ${m.content}`).join('\n')
+  return messages
+    .map((m: any) => `${m.role}: ${m.content}`)
+    .join('\n')
 }
 
 function extractOutput(response: OpenAIResponse): { text?: string; tool_calls?: Array<{ name: string; arguments: unknown }> } {
-  const choice = response.choices?.[0]
+  const choice = (response as any).choices?.[0]
   if (!choice) return { text: '' }
   
   const output: { text?: string; tool_calls?: Array<{ name: string; arguments: unknown }> } = {}
@@ -20,10 +22,9 @@ function extractOutput(response: OpenAIResponse): { text?: string; tool_calls?: 
   }
   
   if (choice.message?.tool_calls) {
-    output.tool_calls = choice.message.tool_calls.map((tc: { function?: { name: string; arguments: unknown } }) => ({
-      name: tc.function?.name,
-      arguments: tc.function?.arguments
-    }))
+    output.tool_calls = choice.message.tool_calls
+      .map((tc: any) => ({ name: tc.function?.name as string, arguments: tc.function?.arguments }))
+      .filter((tc: { name?: string }) => typeof tc.name === 'string') as Array<{ name: string; arguments: unknown }>
   }
   
   return output
@@ -57,20 +58,16 @@ export function withPromptProofOpenAI(client: OpenAIClient, options: PromptProof
     outputDir: options.outputDir
   })
   
-  return new Proxy(client, {
-    get(target, prop) {
+  return new Proxy(client as any, {
+    get(target: any, prop: string | symbol) {
       const orig = target[prop]
-      
       if (prop !== 'chat') return orig
-      
-      return new Proxy(orig, {
-        get(chat, cprop) {
+      return new Proxy(orig as any, {
+        get(chat: any, cprop: string | symbol) {
           if (cprop !== 'completions') return chat[cprop]
-          
           const completions = chat.completions
-          
-          return new Proxy(completions, {
-            get(comp, method) {
+          return new Proxy(completions as any, {
+            get(comp: any, method: string | symbol) {
               if (method !== 'create') return comp[method]
               
               return async function(this: unknown, ...args: unknown[]) {
@@ -80,11 +77,11 @@ export function withPromptProofOpenAI(client: OpenAIClient, options: PromptProof
                 }
 
                 const startTime = Date.now()
-                const params = (args[0] as Record<string, unknown>) || {}
+                const params = (args[0] as Record<string, any>) || {}
                 
                 try {
                   // Call original method
-                  const response = await comp.create.apply(this, args)
+                  const response: any = await comp.create.apply(this, args)
                   const endTime = Date.now()
                   
                   // Create fixture record
@@ -93,26 +90,26 @@ export function withPromptProofOpenAI(client: OpenAIClient, options: PromptProof
                   
                   const record: FixtureRecord = {
                     schema_version: 'pp.v1',
-                    id: generateId(prompt, params.model || 'unknown', timestamp),
+                    id: generateId(prompt, (params as any).model || 'unknown', timestamp),
                     timestamp,
                     source,
                     locale: 'en',
                     input: {
                       prompt,
                       params: {
-                        model: params.model,
-                        temperature: params.temperature,
-                        max_tokens: params.max_tokens,
-                        top_p: params.top_p,
-                        frequency_penalty: params.frequency_penalty,
-                        presence_penalty: params.presence_penalty,
-                        stream: params.stream
+                        model: (params as any).model,
+                        temperature: (params as any).temperature,
+                        max_tokens: (params as any).max_tokens,
+                        top_p: (params as any).top_p,
+                        frequency_penalty: (params as any).frequency_penalty,
+                        presence_penalty: (params as any).presence_penalty,
+                        stream: (params as any).stream
                       }
                     },
                     output: extractOutput(response),
                     metrics: {
                       latency_ms: endTime - startTime,
-                      cost_usd: calculateCost(params.model, response.usage),
+                      cost_usd: calculateCost((params as any).model || 'unknown', response.usage),
                       input_tokens: response.usage?.prompt_tokens,
                       output_tokens: response.usage?.completion_tokens,
                       total_tokens: response.usage?.total_tokens
