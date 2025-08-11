@@ -16,8 +16,15 @@ export class BudgetCalculator {
     records: FixtureRecord[],
     budgets?: {
       cost_usd_per_run_max?: number
+      cost_usd_total_max?: number
       latency_ms_p95_max?: number
       latency_ms_p99_max?: number
+      cost_usd_total_pct_increase_max?: number
+      latency_ms_p95_pct_increase_max?: number
+    },
+    baseline?: {
+      cost_usd_total?: number
+      latency_ms_p95?: number
     }
   ): BudgetResult {
     const violations: Violation[] = []
@@ -45,6 +52,17 @@ export class BudgetCalculator {
           severity: 'error',
         })
       }
+      
+      // Total cost gate (max_run_cost)
+      if (budgets.cost_usd_total_max !== undefined && cost_usd_total > budgets.cost_usd_total_max) {
+        violations.push({
+          id: 'budget-cost-total',
+          checkId: 'budget',
+          recordId: 'aggregate',
+          message: `Total cost $${cost_usd_total.toFixed(4)} exceeds budget $${budgets.cost_usd_total_max.toFixed(4)}`,
+          severity: 'error',
+        })
+      }
 
       if (budgets.latency_ms_p95_max !== undefined && latency_ms_p95 > budgets.latency_ms_p95_max) {
         violations.push({
@@ -64,6 +82,35 @@ export class BudgetCalculator {
           message: `P99 latency ${latency_ms_p99}ms exceeds budget ${budgets.latency_ms_p99_max}ms`,
           severity: 'error',
         })
+      }
+      
+      // Regression-based budget checks
+      if (baseline) {
+        if (budgets.cost_usd_total_pct_increase_max !== undefined && baseline.cost_usd_total) {
+          const pctIncrease = ((cost_usd_total - baseline.cost_usd_total) / baseline.cost_usd_total) * 100
+          if (pctIncrease > budgets.cost_usd_total_pct_increase_max) {
+            violations.push({
+              id: 'budget-cost-regression',
+              checkId: 'budget',
+              recordId: 'aggregate',
+              message: `Total cost increased by ${pctIncrease.toFixed(1)}% (max allowed: ${budgets.cost_usd_total_pct_increase_max}%)`,
+              severity: 'error',
+            })
+          }
+        }
+        
+        if (budgets.latency_ms_p95_pct_increase_max !== undefined && baseline.latency_ms_p95) {
+          const pctIncrease = ((latency_ms_p95 - baseline.latency_ms_p95) / baseline.latency_ms_p95) * 100
+          if (pctIncrease > budgets.latency_ms_p95_pct_increase_max) {
+            violations.push({
+              id: 'budget-latency-regression',
+              checkId: 'budget',
+              recordId: 'aggregate',
+              message: `P95 latency increased by ${pctIncrease.toFixed(1)}% (max allowed: ${budgets.latency_ms_p95_pct_increase_max}%)`,
+              severity: 'error',
+            })
+          }
+        }
       }
     }
 

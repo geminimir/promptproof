@@ -7,13 +7,14 @@ import { initCommand } from './commands/init'
 import { promoteCommand } from './commands/promote'
 import { redactCommand } from './commands/redact'
 import { validateCommand } from './commands/validate'
+import { snapshotCommand } from './commands/snapshot'
 
 const program = new Command()
 
 program
   .name('promptproof')
   .description('Deterministic LLM testing for production reliability')
-  .version('0.1.0-beta.2')
+  .version('0.1.0-beta.3')
 
 // eval command
 program
@@ -23,6 +24,9 @@ program
   .option('--out <path>', 'Output directory for reports')
   .option('--format <type>', 'Output format (console|html|junit|json)', 'console')
   .option('--warn', 'Run in warning mode (non-blocking)')
+  .option('--regress', 'Compare against baseline snapshot')
+  .option('--seed <number>', 'Seed for nondeterministic checks', parseInt)
+  .option('--runs <number>', 'Number of runs for nondeterministic checks', parseInt)
   .action(async (options) => {
     await evalCommand(options)
   })
@@ -69,6 +73,17 @@ program
   .option('--verbose', 'Show all validation errors')
   .action(async (input, options) => {
     await validateCommand(input, options)
+  })
+
+// snapshot command
+program
+  .command('snapshot <config>')
+  .description('Create a snapshot of current evaluation state')
+  .option('--tag <tag>', 'Snapshot tag (defaults to timestamp)')
+  .option('--suite <suite>', 'Suite name (defaults to fixture basename)')
+  .option('--promote', 'Promote snapshot to baseline')
+  .action(async (config, options) => {
+    await snapshotCommand(config, options)
   })
 
 // Error handling

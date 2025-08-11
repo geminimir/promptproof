@@ -65,8 +65,11 @@ This writes sanitized JSONL lines to `fixtures/<suite>/outputs*.jsonl` for deter
 ## 🎯 Key Features
 
 - **Deterministic Replay**: Test against recorded LLM outputs with zero network calls in CI
-- **Contract Enforcement**: Define and enforce JSON schemas, regex patterns, numeric bounds, and custom checks
-- **CI/CD Integration**: GitHub Action that fails PRs on contract violations
+- **Comprehensive Assertions**: JSON schemas, regex patterns, numeric bounds, string operations, list/set equality, file diffs, and custom checks
+- **Regression Testing**: Snapshot baselines and automatic comparison to catch new failures and performance degradation
+- **Cost Controls**: Budget gates for total cost, per-test cost, and latency with regression tracking
+- **Flake Management**: Seed control and multiple runs with stability scoring for non-deterministic checks
+- **CI/CD Integration**: GitHub Action that fails PRs on violations with detailed reporting
 - **Provider Agnostic**: Works with OpenAI, Anthropic, and any HTTP-based LLM API
 - **Privacy First**: Built-in PII redaction and offline evaluation
 
@@ -195,10 +198,24 @@ checks:
       properties:
         status: { type: string, enum: [success, error] }
         message: { type: string }
+  
+  - id: contains_disclaimer
+    type: string_contains
+    target: output.text
+    expected: "We cannot guarantee"
+    ignore_case: true
+  
+  - id: response_list_exact
+    type: list_equality
+    target: output.json.items
+    expected: ["step1", "step2", "step3"]
+    order_sensitive: true
 
 budgets:
   cost_usd_per_run_max: 0.50
+  cost_usd_total_max: 10.00  # Total cost gate
   latency_ms_p95_max: 2000
+  cost_usd_total_pct_increase_max: 10  # Max 10% cost increase vs baseline
 
 mode: warn  # Start with 'warn', switch to 'fail' after validation
 ```
@@ -208,6 +225,15 @@ mode: warn  # Start with 'warn', switch to 'fail' after validation
 ```bash
 # Local evaluation
 promptproof eval -c promptproof.yaml
+
+# With regression comparison against baseline
+promptproof eval -c promptproof.yaml --regress
+
+# With flake controls for non-deterministic checks
+promptproof eval -c promptproof.yaml --seed 42 --runs 3
+
+# Create a snapshot after successful run
+promptproof snapshot promptproof.yaml --promote
 
 # In CI (automatic via GitHub Action)
 # Runs on every PR and blocks merge on violations
@@ -244,6 +270,18 @@ Control recording behavior with environment variables:
   [response_schema] Record #89: Missing required field 'status'
   [latency_budget] P95 latency: 2341ms exceeds limit of 2000ms
 
+📊 Regression Comparison
+Baseline: 2024-01-15-stable
+⚠ 2 new failures:
+  • [string_contains] test-102: Expected string "disclaimer" not found
+  • [cost_budget] Total cost $12.50 exceeds budget $10.00
+✓ 1 fixed failures
+↔ 0 unchanged failures
+
+Cost & Performance:
+Cost: ↑ $2.50 (25.0%)
+P95 Latency: ↑ 341ms
+
 Exit code: 1
 ```
 
@@ -259,6 +297,14 @@ Developer → PR → GitHub Action → CLI eval → Report → Pass/Fail Gate
 
 ```bash
 promptproof eval        # Run contract checks on fixtures
+  --regress             # Compare against baseline snapshot
+  --seed <n>            # Set seed for non-deterministic checks
+  --runs <k>            # Run non-deterministic checks k times
+
+promptproof snapshot   # Create evaluation snapshot
+  --promote             # Promote to baseline
+  --tag <name>          # Custom snapshot tag
+
 promptproof init        # Initialize project with templates
 promptproof promote     # Convert logs to fixture format
 promptproof redact      # Remove PII from fixtures
