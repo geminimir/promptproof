@@ -357,6 +357,7 @@ MIT License - see [LICENSE](./LICENSE) for details.
 
 ## 🔗 Links
 
+- [Website](https://promptproof.io)
 - [GitHub Repository](https://github.com/geminimir/promptproof)
 - [CLI Package](https://www.npmjs.com/package/promptproof-cli) (`@beta`)
 - [SDK Package](https://www.npmjs.com/package/promptproof-sdk-node) (`@beta`)

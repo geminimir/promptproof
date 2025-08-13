@@ -1,5 +1,7 @@
 # PromptProof GitHub Action
 
+[![Website](https://img.shields.io/badge/Website-promptproof.io-darkgreen)](https://promptproof.io)
+
 Deterministic LLM testing in your CI/CD pipeline. This action evaluates recorded LLM outputs against defined contracts and fails PRs when violations are detected.
 
 ## Features
