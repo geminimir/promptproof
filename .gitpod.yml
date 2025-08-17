@@ -1,0 +1,12 @@
+image: gitpod/workspace-node:20
+tasks:
+  - name: Setup
+    init: |
+      corepack enable
+      corepack prepare pnpm@9 --activate
+      pnpm i
+    command: pnpm run try:example
+ports:
+  - port: 3000
+    visibility: public
+    onOpen: ignore

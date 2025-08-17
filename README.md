@@ -3,6 +3,16 @@
 Deterministic LLM testing for production reliability.  
 **Record→Replay + policy‑as‑code** to catch PII leaks, schema drift, and behavioral regressions **before merge**.
 
+<p>
+  <a href="https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=1035076523">
+    <img alt="Open in Codespaces" src="https://github.com/codespaces/badge.svg" />
+  </a>
+  &nbsp;
+  <a href="https://gitpod.io/#https://github.com/geminimir/promptproof">
+    <img alt="Open in Gitpod" src="https://img.shields.io/badge/Gitpod-Open%20Workspace-blue?logo=gitpod" />
+  </a>
+</p>
+
 [![CI](https://img.shields.io/github/actions/workflow/status/geminimir/promptproof/promptproof.yml?branch=main)](https://github.com/geminimir/promptproof/actions)
 [![Action](https://img.shields.io/badge/Marketplace-promptproof--action-blue?logo=github)](https://github.com/marketplace/actions/promptproof-eval)
 [![npm (CLI)](https://img.shields.io/npm/v/promptproof-cli?label=promptproof-cli)](https://www.npmjs.com/package/promptproof-cli)
@@ -10,6 +20,24 @@ Deterministic LLM testing for production reliability.
 ![node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
 ![license](https://img.shields.io/badge/license-MIT-green)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
+
+## Try it in 60s 🚀
+
+```bash
+# Clone and try the example (expect a failure)
+git clone https://github.com/geminimir/promptproof.git
+cd promptproof
+corepack enable && corepack prepare pnpm@9 --activate
+pnpm i
+pnpm run try:example
+```
+
+This runs PromptProof against a deliberately failing JSON output. **No API calls, no setup** - just pure validation.
+
+Then fix it:
+```bash
+pnpm run fix:example  # Now it passes!
+```
 
 ## Quickstart
 

@@ -1,152 +1,279 @@
-# Contributing to PromptProof
+# Contributing
 
-Thank you for your interest in contributing to PromptProof! This document provides guidelines and information for contributors.
+## Quick start (≈5 minutes)
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js >= 18.0.0
-- npm >= 8.0.0
-- Git
-
-### Development Setup
-
-1. **Fork and clone the repository**
+1. **Fork & clone** the repo.
+2. **Setup Node & pnpm**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/promptproof.git
-   cd promptproof
+   corepack enable && corepack prepare pnpm@9 --activate
+   pnpm i
    ```
 
-2. **Install dependencies**
+3. **Run the example (expect a failure)**
    ```bash
-   npm install
+   pnpm run try:example
+   # You'll see schema failures on /tmp/pp-output.json
    ```
 
-3. **Build the project**
+4. **Make it green**
    ```bash
-   npm run build
+   pnpm run fix:example
+   # This switches to a good output and passes all rules
    ```
 
-4. **Run tests**
+5. **Tests**
    ```bash
-   npm test
+   pnpm test
    ```
 
-## Development Workflow
+## Dev tips
 
-### Code Style
+* Use **Codespaces/Gitpod** buttons in the README for a one-click env.
+* The example is **deterministic** (no API calls), so CI is fast and stable.
+* Please open PRs against `main`; CI will show the failing → passing diff.
 
-- We use **TypeScript** for all new code
-- Follow the existing code style and formatting
-- Run `npm run lint` to check for linting issues
-- Run `npm run format` to automatically format code
+## Commit style
 
-### Commit Style
+* Conventional commits: `feat:`, `fix:`, `docs:`, `chore:`, `test:`
 
-We follow [Conventional Commits](https://www.conventionalcommits.org/):
+## Code of Conduct
 
-- `feat:` for new features
-- `fix:` for bug fixes
-- `docs:` for documentation changes
-- `style:` for formatting changes
-- `refactor:` for code refactoring
-- `test:` for adding or updating tests
-- `chore:` for maintenance tasks
-
-Example:
-```
-feat: add support for Anthropic Claude API
-fix: resolve PII redaction edge case
-docs: update README with new examples
-```
-
-### Testing
-
-- Write tests for new features and bug fixes
-- Ensure all tests pass before submitting a PR
-- Add integration tests for CLI commands
-- Test with real LLM APIs when possible (use test keys)
-
-### Pull Request Process
-
-1. **Create a feature branch**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-2. **Make your changes**
-   - Write code following our style guidelines
-   - Add tests for new functionality
-   - Update documentation as needed
-
-3. **Sanitize fixtures**
-   - Ensure no real PII or sensitive data in test fixtures
-   - Use the `promptproof redact` command if needed
-
-4. **Test your changes**
-   ```bash
-   npm run build
-   npm test
-   npm run lint
-   ```
-
-5. **Submit a pull request**
-   - Use the PR template
-   - Provide a clear description of changes
-   - Link any related issues
+Be kind. Assume good intent. Review with empathy.
 
 ## Project Structure
 
 ```
-promptproof-cli/
+promptproof/
 ├── packages/
-│   ├── cli/           # Command-line interface
-│   ├── evaluator/     # Core evaluation engine
-│   ├── sdk-node/      # Node.js SDK
-│   ├── action/        # GitHub Action
-│   └── sdk-wrappers/  # Provider-specific wrappers
-├── examples/          # Example projects
-├── fixtures/          # Test fixtures
-├── zoo/              # Failure cases
-└── docs/             # Documentation
+│   ├── cli/                 # Main CLI package
+│   ├── evaluator/           # Core evaluation engine
+│   ├── sdk-node/            # Node.js SDK wrappers
+│   └── sdk-wrappers/        # Language-specific wrappers
+├── examples/                # Sample projects
+│   ├── nextjs-json-guard/   # Quick demo (deterministic)
+│   └── node-support-bot/    # Full example
+├── fixtures/                # Test data
+└── zoo/                     # Real-world failure cases
 ```
 
-## Areas for Contribution
+## Development Workflow
 
-### Good First Issues
+### 1. Local Development
 
-- Documentation improvements
-- Test coverage expansion
-- Bug fixes labeled "good first issue"
-- Example projects and tutorials
+```bash
+# Install dependencies
+pnpm i
 
-### Advanced Contributions
+# Build all packages
+pnpm build
 
-- New check types for the evaluator
-- Additional LLM provider support
-- Performance optimizations
-- Advanced CI/CD integrations
+# Run tests
+pnpm test
 
-## Reporting Issues
+# Lint code
+pnpm lint
 
-When reporting bugs, please include:
+# Format code
+pnpm format
+```
 
-- **Version information**: CLI and SDK versions
-- **Environment**: OS, Node.js version, npm version
-- **Reproduction steps**: Clear steps to reproduce the issue
-- **Expected vs actual behavior**: What you expected vs what happened
-- **Fixture line**: If applicable, the specific fixture that's failing
-- **Logs**: Any error messages or console output
+### 2. Working with Examples
 
-## Code of Conduct
+```bash
+# Run the quick demo (fails intentionally)
+pnpm run try:example
 
-This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+# Fix the demo (passes)
+pnpm run fix:example
 
-## Questions?
+# Work with the full support bot example
+cd examples/node-support-bot
+pnpm i
+pnpm dev
+```
 
-- Open a [GitHub Discussion](https://github.com/geminimir/promptproof/discussions) for questions
-- Join our community channels (if available)
-- Check existing issues and discussions first
+### 3. Adding New Rules/Checks
 
-Thank you for contributing to PromptProof! 🚀
+1. Create the check implementation in `packages/cli/src/checks/`
+2. Add the type to `CheckConfig` in `packages/cli/src/types.ts`
+3. Register it in the evaluator
+4. Add tests and examples
+5. Update documentation
+
+Example check structure:
+```typescript
+// packages/cli/src/checks/my_new_check.ts
+import { Check, CheckContext, Violation } from '../types'
+
+export class MyNewCheck implements Check {
+  id: string
+
+  constructor(id: string) {
+    this.id = id
+  }
+
+  async run(ctx: CheckContext): Promise<Violation[]> {
+    // Implementation here
+    return []
+  }
+}
+```
+
+### 4. Testing
+
+```bash
+# Run all tests
+pnpm test
+
+# Test specific package
+pnpm --filter promptproof-cli test
+
+# Test with coverage
+pnpm test --coverage
+```
+
+### 5. Documentation
+
+* Update README.md for user-facing changes
+* Add examples to `examples/` directory
+* Document new check types in the schema
+* Add failure cases to `zoo/` if relevant
+
+## Creating Issues
+
+### Bug Reports
+
+Please include:
+- PromptProof version
+- Node.js version
+- Operating system
+- Minimal reproduction case
+- Expected vs actual behavior
+
+### Feature Requests
+
+Please include:
+- Use case description
+- Proposed API/interface
+- Examples of how it would work
+- Why existing features don't solve the problem
+
+## Pull Request Guidelines
+
+### Before Submitting
+
+1. **Test thoroughly**: Run `pnpm test` and `pnpm run try:example`
+2. **Follow conventions**: Use conventional commits
+3. **Update docs**: Include relevant documentation changes
+4. **Add tests**: New features need tests
+5. **Check CI**: Ensure all checks pass
+
+### PR Template
+
+```markdown
+## Description
+Brief description of changes
+
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Documentation update
+- [ ] Refactoring
+
+## Testing
+- [ ] Tests pass locally
+- [ ] Added new tests for changes
+- [ ] Example still works (`pnpm run try:example`)
+
+## Checklist
+- [ ] Code follows project style
+- [ ] Self-review completed
+- [ ] Documentation updated
+- [ ] No breaking changes (or marked as such)
+```
+
+## Release Process
+
+1. Version bump in relevant packages
+2. Update CHANGELOG.md
+3. Create GitHub release
+4. Publish to npm
+5. Update action marketplace (if applicable)
+
+## Getting Help
+
+* **GitHub Issues**: Bug reports and feature requests
+* **GitHub Discussions**: Questions and community help
+* **Discord**: Real-time chat (link in README)
+
+## Code Style
+
+* **TypeScript**: Strict mode enabled
+* **ESLint**: Configured with recommended rules
+* **Prettier**: Automatic formatting
+* **Conventional Commits**: For clear history
+
+## Architecture Notes
+
+### CLI Package
+- Entry point: `packages/cli/src/index.ts`
+- Commands: `packages/cli/src/commands/`
+- Checks: `packages/cli/src/checks/`
+- Types: `packages/cli/src/types.ts`
+
+### SDK Package
+- Wrappers for OpenAI, Anthropic, HTTP
+- Automatic fixture recording
+- PII redaction by default
+
+### Evaluator Package
+- Core evaluation logic
+- Policy parsing and validation
+- Reporter implementations
+
+## Common Tasks
+
+### Add a New Command
+
+1. Create command file in `packages/cli/src/commands/`
+2. Register in main CLI entry point
+3. Add tests and documentation
+4. Update help text
+
+### Add a New Check Type
+
+1. Implement in `packages/cli/src/checks/`
+2. Add to `CheckConfig` type
+3. Register in evaluator
+4. Add example usage
+5. Document in README
+
+### Add a New Reporter
+
+1. Implement `Reporter` interface
+2. Add to `packages/cli/src/reporters/`
+3. Register in CLI options
+4. Add tests and examples
+
+### Update Dependencies
+
+```bash
+# Update all dependencies
+pnpm update
+
+# Update specific dependency
+pnpm update package-name
+
+# Check for outdated packages
+pnpm outdated
+```
+
+## Security
+
+* Report security issues privately via GitHub Security tab
+* Follow responsible disclosure practices
+* Security patches get priority review
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the MIT License.

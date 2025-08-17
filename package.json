@@ -15,7 +15,9 @@
     "test": "npm run test --workspaces",
     "lint": "eslint packages/*/src --ext .ts,.js",
     "format": "prettier --write 'packages/**/*.{ts,js,json}'",
-    "clean": "rm -rf packages/*/dist packages/*/build"
+    "clean": "rm -rf packages/*/dist packages/*/build",
+    "try:example": "pnpm --filter pp-nextjs-json-guard try",
+    "fix:example": "pnpm --filter pp-nextjs-json-guard fix"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

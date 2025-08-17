@@ -1,0 +1,24 @@
+name: example-nextjs-json-guard
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: examples/nextjs-json-guard
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: corepack enable && corepack prepare pnpm@9 --activate
+      - run: pnpm i
+      - name: Run failing check (bad → fails)
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main')
+        run: pnpm bad && pnpm check
+      - name: Run check for PR (show fix path)
+        if: github.event_name == 'pull_request'
+        run: pnpm bad && pnpm check

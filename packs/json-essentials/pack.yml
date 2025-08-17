@@ -1,0 +1,84 @@
+pack:
+  name: json-essentials
+  version: 0.1.0
+  description: "Baseline JSON validity, required keys, ISO date, max length, and array shape guards."
+  homepage: "https://promptproof.io/packs/json-essentials"
+rules:
+  - id: json-valid
+    type: json_schema
+    target: json
+    schema:
+      type: object
+
+  - id: required-keys
+    type: json_schema
+    target: json
+    schema:
+      type: object
+      required: ["title", "summary"]
+
+  - id: summary-length
+    type: json_schema
+    target: json
+    schema:
+      type: object
+      properties:
+        summary:
+          type: string
+          minLength: 10
+          maxLength: 280
+
+  - id: title-length
+    type: json_schema
+    target: json
+    schema:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 120
+
+  - id: iso-date
+    type: json_schema
+    target: json
+    schema:
+      type: object
+      properties:
+        date: 
+          type: string
+          pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+
+  - id: tags-array
+    type: json_schema
+    target: json
+    schema:
+      type: object
+      properties:
+        tags:
+          type: array
+          items: 
+            type: string
+          maxItems: 5
+
+  - id: no-null-empty
+    type: json_schema
+    target: json
+    schema:
+      type: object
+      not:
+        anyOf:
+          - properties:
+              title: { type: "null" }
+          - properties:
+              summary: { type: "null" }
+          - properties:
+              date: { type: "null" }
+
+  - id: no-unsafe-strings-lite
+    type: regex_forbidden
+    target: json.title
+    patterns:
+      - "<script"
+      - "`rm -rf`"
+      - "file://"

@@ -1,0 +1,55 @@
+schema_version: pp.v1
+fixtures: fixtures/current-output.jsonl
+selectors:
+  json: output.json  # JSON output from the LLM
+checks:
+  - id: valid-json
+    type: json_schema
+    target: json
+    schema:
+      type: object
+
+  - id: required-keys
+    type: json_schema
+    target: json
+    schema:
+      type: object
+      required: ["title", "summary", "date", "tags"]
+
+  - id: schema
+    type: json_schema
+    target: json
+    schema:
+      type: object
+      required: ["title", "summary", "date", "tags"]
+      properties:
+        title: 
+          type: string
+          minLength: 3
+          maxLength: 120
+        summary: 
+          type: string
+          minLength: 10
+          maxLength: 280
+        date:
+          anyOf:
+            - type: string
+              pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+            - type: "null"
+        tags:
+          type: array
+          items: 
+            type: string
+          maxItems: 5
+
+  - id: no-null-date
+    type: json_schema
+    target: json
+    schema:
+      type: object
+      properties:
+        date:
+          type: string
+          pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+
+mode: fail
