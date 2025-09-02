@@ -14,6 +14,7 @@ import { BudgetCalculator } from './budgets'
 import { ConsoleReporter } from './reporters/console'
 import { HtmlReporter } from './reporters/html'
 import { JunitReporter } from './reporters/junit'
+import { SarifReporter } from './reporters/sarif'
 
 export * from './types'
 export { FixtureLoader } from './loaders'
@@ -234,7 +235,7 @@ export class Evaluator {
     return new Evaluator(policy, fixtures)
   }
 
-  static getReporter(format: 'console' | 'html' | 'junit' | 'json') {
+  static getReporter(format: 'console' | 'html' | 'junit' | 'json' | 'sarif') {
     switch (format) {
       case 'console':
         return new ConsoleReporter()
@@ -242,6 +243,8 @@ export class Evaluator {
         return new HtmlReporter()
       case 'junit':
         return new JunitReporter()
+      case 'sarif':
+        return new SarifReporter()
       case 'json':
         return {
           format: (result: EvaluationResult) => JSON.stringify(result, null, 2),

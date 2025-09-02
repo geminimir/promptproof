@@ -9,7 +9,7 @@ import { PolicyConfig, EvaluationResult, Violation } from '../types'
 export interface EvalOptions {
   config: string
   out?: string
-  format?: 'console' | 'html' | 'junit' | 'json'
+  format?: 'console' | 'html' | 'junit' | 'json' | 'sarif'
   warn?: boolean
   regress?: boolean
   seed?: number
@@ -85,6 +85,7 @@ export async function evalCommand(options: EvalOptions): Promise<void> {
       const outputFile = format === 'html' ? `${options.out}.html` :
                         format === 'junit' ? `${options.out}.xml` :
                         format === 'json' ? `${options.out}.json` :
+                        format === 'sarif' ? `${options.out}.sarif` :
                         `${options.out}.txt`
       
       await reporter.write(result, outputFile)
