@@ -75,6 +75,14 @@ pnpm lint
 
 # Format code
 pnpm format
+
+# Type-check all packages
+pnpm type-check
+
+# Useful monorepo filters (speed up local loops)
+pnpm --filter promptproof-cli build
+pnpm --filter promptproof-cli test
+pnpm --filter ./packages/evaluator... test
 ```
 
 ### 2. Working with Examples
@@ -197,8 +205,10 @@ Brief description of changes
 1. Version bump in relevant packages
 2. Update CHANGELOG.md
 3. Create GitHub release
-4. Publish to npm
-5. Update action marketplace (if applicable)
+4. Publish to npm (see detailed steps below)
+5. Update Action marketplace (if applicable)
+
+For the CLI publish flow (beta → latest), follow the step‑by‑step guide in `npm-package-publish.md`.
 
 ## Getting Help
 

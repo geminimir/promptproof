@@ -52,7 +52,7 @@ npx promptproof-cli@latest eval -c promptproof.yaml --out report
 # .github/workflows/promptproof.yml
 name: PromptProof
 on: [pull_request]
-permissions: { contents: read, pull-requests: write }
+permissions: { contents: read, pull-requests: write, security-events: write }
 jobs:
   eval:
     runs-on: ubuntu-latest
@@ -61,6 +61,7 @@ jobs:
       - uses: geminimir/promptproof-action@v0
         with:
           config: promptproof.yaml
+          format: sarif  # optional: upload to Code Scanning
 ```
 
 ### One‑line recording (Node)

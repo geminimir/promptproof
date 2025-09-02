@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "PromptProof",
+          "informationUri": "https://github.com/geminimir/promptproof",
+          "version": "0",
+          "rules": []
+        }
+      },
+      "results": [],
+      "properties": {
+        "promptproof": {
+          "total": 5,
+          "passed": 5,
+          "failed": 0,
+          "budgets": {
+            "cost_usd_total": 0.0043,
+            "cost_usd_per_run_max": 0.0009,
+            "latency_ms_p95": 1678,
+            "latency_ms_p99": 1678,
+            "violations": 0
+          },
+          "mode": "fail"
+        }
+      }
+    }
+  ]
+}

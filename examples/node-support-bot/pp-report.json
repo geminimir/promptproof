@@ -1,0 +1,15 @@
+{
+  "total": 5,
+  "passed": 5,
+  "failed": 0,
+  "violations": [],
+  "budgets": {
+    "cost_usd_total": 0.0043,
+    "cost_usd_per_run_max": 0.0009,
+    "latency_ms_p95": 1678,
+    "latency_ms_p99": 1678,
+    "violations": []
+  },
+  "mode": "fail",
+  "exitCode": 0
+}

@@ -22,7 +22,7 @@ program
   .description('Evaluate fixtures against policy')
   .option('-c, --config <path>', 'Path to promptproof.yaml', 'promptproof.yaml')
   .option('--out <path>', 'Output directory for reports')
-  .option('--format <type>', 'Output format (console|html|junit|json)', 'console')
+  .option('--format <type>', 'Output format (console|html|junit|json|sarif)', 'console')
   .option('--warn', 'Run in warning mode (non-blocking)')
   .option('--regress', 'Compare against baseline snapshot')
   .option('--seed <number>', 'Seed for nondeterministic checks', parseInt)
