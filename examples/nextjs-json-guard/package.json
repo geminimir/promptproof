@@ -4,7 +4,7 @@
   "scripts": {
     "bad": "node scripts/generate.js bad > fixtures/current-output.jsonl && cat fixtures/current-output.jsonl",
     "good": "node scripts/generate.js good > fixtures/current-output.jsonl && cat fixtures/current-output.jsonl", 
-    "check": "node ../../packages/cli/dist/index.js eval -c .promptproof/rules.yml",
+    "check": "node -e \"require('fs').accessSync(require('path').join(__dirname,'..','..','packages','cli','dist','index.js'))\" && node ../../packages/cli/dist/index.js eval -c .promptproof/rules.yml || npx -y promptproof-cli eval -c .promptproof/rules.yml",
     "try": "pnpm bad && pnpm check || true",
     "fix": "pnpm good && pnpm check"
   },
